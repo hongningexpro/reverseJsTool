@@ -3,6 +3,8 @@ const fs = require('fs');
 
 // 函数混淆处理
 function reverseFuc() {
+	
+	let startTs = new Date().getTime();
 	let replaceCnt = 0;
 	let originJS = CONFIG.fucReverse.originJS;
 	let analyzeJS = CONFIG.fucReverse.analyzeJS;
@@ -31,17 +33,26 @@ function reverseFuc() {
 			// 取消两边引号
 			param = param.substring(1, param.length-1);
 			let result = analyzeFuc(param);
-			console.log(result);
+			//console.log(result);
 			// 替换文本	
-			oldJS = oldJS.replace(reg, `"${result}"`);
-			replaceCnt +=1;
+			while (oldJS.indexOf(m) !== -1) {
+				console.log(`把${m}替换成"${result}"`);
+				if (result.indexOf('$') !== -1) {
+					let startIdx = oldJS.indexOf(m);
+					oldJS = oldJS.substring(0, startIdx) + `"${result}"` + oldJS.substring(startIdx+m.length);
+				} else {
+					oldJS = oldJS.replace(m, `"${result}"`);
+				}
+				replaceCnt +=1;
+			}
 		});
 	});
 	
 	// 写出文件
 	const data = new Uint8Array(Buffer.from(oldJS));
 	fs.writeFileSync(newJS, data);
-	console.log(`还原完成，总共替换: ${replaceCnt}次`);
+	let endTs = new Date().getTime();
+	console.log(`还原完成，总共替换: ${replaceCnt}次, 耗时: ${endTs-startTs}ms`);
 }
 
 // 数组混淆处理
